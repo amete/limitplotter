@@ -29,6 +29,8 @@ def get_configuration(grid) :
     configuration_file = ""
     if grid == "bWN" :
         configuration_file = "SRwt_sfdf.py"
+    elif grid == "c1c1_slep" :
+        configuration_file = "c1c1_slep.py"
     else :
         print "get_configuration    ERROR unsupported grid. Exiting."
         sys.exit()
@@ -36,9 +38,135 @@ def get_configuration(grid) :
     print "get_configuration    grabbing configuration file (%s)"%configuration_file
     return configuration_file
 
+def find_best_SR_per_point(conf) :
+    '''
+    For each signal point, loop over the regions and
+    determine which is the best based on which has the
+    largest expected significance.
+    '''
+    signals = conf.signals   # list of signal points [ Signal ]
+    regions = conf.regions   # list of regions       [ Region ]
+    
+    for s in signals :
+        exp_sig_dict = s.expectedSig
+        best_region = max(exp_sig_dict.iteritems(), key=operator.itemgetter(1))[0]
+        
+        s.bestRegion = best_region
+        # fill the best region values
+        # CLs
+        s.bestObservedCLs = s.observedCLs[best_region]
+        s.bestExpectedCLs = s.expectedCLs[best_region]
+        s.bestExpectedCLsUp1s = s.expectedCLsUp1s[best_region]
+        s.bestExpectedCLsDn1s = s.expectedCLsDn1s[best_region]
+        # signif.
+        s.bestObservedSig = s.observedSig[best_region]
+        s.bestExpectedSig = s.expectedSig[best_region]
+        s.bestExpectedSigUp1s = s.expectedSigUp1s[best_region]
+        s.bestExpectedSigDn1s = s.expectedSigDn1s[best_region]
+        # observed CLs up/down
+        if s.observedCLsUp1s : s.bestObservedCLsUp1s = s.observedCLsUp1s[best_region]
+        if s.observedCLsDn1s : s.bestObservedCLsDn1s = s.observedCLsDn1s[best_region]
+        # observed signif. up/down
+        if s.observedSigUp1s : s.bestObservedSigUp1s = s.observedSigUp1s[best_region]
+        if s.observedSigDn1s : s.bestObservedSigDn1s = s.observedSigDn1s[best_region]
+
 def make_best_sr_plot(conf) :
-    print "make_best_sr_plot    THIS METHOD IS NOT IMPLEMENTED"
-    sys.exit()
+    '''
+    Make a plot showing a region marker for the best
+    region at each point
+    '''
+    c = conf.best_sr_canvas
+    c.cd()
+    
+    # draw the frame/axes
+    frame = make_frame(conf)
+    frame.Draw("axis")
+    frame.GetXaxis().SetTitle(conf.x_title)
+    frame.GetYaxis().SetTitle(conf.y_title)
+ #   frame.GetXaxis().CenterTitle()
+ #   frame.GetYaxis().CenterTitle()
+    c.Update()
+
+    ## draw forbidden line
+    #line = draw_forbidden_line(conf)
+    #draw_text( (0.0 + 1.5*ROOT.gPad.GetLeftMargin()), (1.0-8.6*ROOT.gPad.GetTopMargin()), ROOT.kGray+2, conf.forbidden_line_text, size=0.03, angle=32.8)
+    #line.Draw()
+    #c.Update()
+
+    # make legend
+    leg = make_default_legend(0.65,0.68,0.90,0.90)
+    # for the best-sr-per-point plot the legend entries
+    # can be ambiguous if the plotted markers overlap it
+    # so make this legend solid fill
+    leg.SetFillColor(ROOT.kWhite)
+    leg.SetFillStyle(1001)
+    leg.SetHeader("Best Selection")
+    leg.Draw()
+
+    # gather the shapes/colors/markers by region
+    shapes = {}
+    colors = {}
+    markers = {}
+    for r in conf.regions :
+        m = ROOT.TMarker()
+        m.SetX(-999)
+        m.SetY(-999)
+        m.SetMarkerStyle(r.shape)
+        m.SetMarkerColor(r.color)
+        colors[r.name] = r.color
+        shapes[r.name] = r.shape
+        m.SetMarkerSize(2.0 * m.GetMarkerSize())
+        markers[r.name] = m
+        m.Draw()
+    # now add the legend entries (ROOT is stupid and doesn't
+    # let me do this in the previous loop 
+    for reg in sorted(markers) :
+        leg.AddEntry(markers[reg], conf.proper_names[reg], 'p')
+    c.Update() 
+
+    # now draw the points
+    ms = []
+    for s in conf.signals :
+        x = s.mX
+        y = s.mY
+        sr = s.bestRegion
+        marker = ROOT.TMarker()
+        marker.SetX(float(x))
+        marker.SetY(float(y))
+        marker.SetMarkerStyle(shapes[str(sr)])
+       # marker = ROOT.TMarker(float(x), float(y), shapes[sr] )
+        marker.SetMarkerSize(2.0 * marker.GetMarkerSize())
+        marker.SetMarkerColor(colors[sr])
+        ms.append(marker)
+    for marker in ms :
+        marker.Draw('same')
+
+    # draw legend again to make sure it is not hidden 
+    # by plotted grid points
+    leg.Draw()
+    c.Update()
+
+    ## draw "official" and process labels
+    #draw_top_left_label(get_atlas_label(),  (0.0 + 1.2*ROOT.gPad.GetLeftMargin()), (1.0-1.5*ROOT.gPad.GetTopMargin()))
+    #draw_top_left_label(get_lumi_label(),   (0.0 + 1.2*ROOT.gPad.GetLeftMargin()), (1.0-2.4*ROOT.gPad.GetTopMargin()))
+    #draw_top_left_label(conf.decay_process, (0.0 + 1.25*ROOT.gPad.GetLeftMargin()), (1.0-3.2*ROOT.gPad.GetTopMargin()))
+    #draw_top_left_label(conf.mass_info,     (0.0 + 1.2*ROOT.gPad.GetLeftMargin()), (1.0-4.0*ROOT.gPad.GetTopMargin()))
+
+    save_name = get_bestSR_output_name(conf)
+    print " >>> Savig best-sr-per-point plot to %s"%save_name
+    c.SaveAs(save_name)
+
+def get_bestSR_output_name(conf) :
+    outname = ""
+    outname += "bestSRplot_"
+    outname += conf.base_region
+    outname += "_"
+    outname += conf.grid
+    outname += "_"
+    if conf.channel != "" :
+        outname += conf.channel
+    outname += ".eps"
+    return outname
 
 def draw_sig_or_cls(conf, reg_="", pwc=False) :
 
@@ -168,17 +296,30 @@ def make_limit_plot(conf) :
     ################################
 
     # obs
-    g_obs       = make_contour(conf, reg_=region, type="obs", pwc=False)
-    print "make_limit_plot   NOT GRABBING UP/DOWN OBSERVED CONTOURS"
-    g_obsUp = None
-    g_obsDn = None
-    #g_obsUp     = make_contour(conf, reg_=region, type="obsUp", pwc=False)
-    #g_obsDn     = make_contour(conf, reg_=region, type="obsDn", pwc=False)
+    if grid == "bWN":
+        g_obs       = make_contour(conf, reg_=region, type="obs", pwc=False)
+        print "make_limit_plot   NOT GRABBING UP/DOWN OBSERVED CONTOURS"
+        g_obsUp = None
+        g_obsDn = None
+        #g_obsUp     = make_contour(conf, reg_=region, type="obsUp", pwc=False)
+        #g_obsDn     = make_contour(conf, reg_=region, type="obsDn", pwc=False)
 
-    # exp
-    g_exp       = make_contour(conf, reg_=region, type="exp", pwc=False)
-    g_expUp     = make_contour(conf, reg_=region, type="expUp", pwc=False)
-    g_expDn     = make_contour(conf, reg_=region, type="expDn", pwc=False)
+        # exp
+        g_exp       = make_contour(conf, reg_=region, type="exp", pwc=False)
+        g_expUp     = make_contour(conf, reg_=region, type="expUp", pwc=False)
+        g_expDn     = make_contour(conf, reg_=region, type="expDn", pwc=False)
+    elif grid == "c1c1_slep":
+        g_obs       = make_contour(conf, reg_=region, type="obs", pwc=True)
+        print "make_limit_plot   NOT GRABBING UP/DOWN OBSERVED CONTOURS"
+        g_obsUp = None
+        g_obsDn = None
+        #g_obsUp     = make_contour(conf, reg_=region, type="obsUp", pwc=True)
+        #g_obsDn     = make_contour(conf, reg_=region, type="obsDn", pwc=True)
+
+        # exp
+        g_exp       = make_contour(conf, reg_=region, type="exp", pwc=True)
+        g_expUp     = make_contour(conf, reg_=region, type="expUp", pwc=True)
+        g_expDn     = make_contour(conf, reg_=region, type="expDn", pwc=True)
 
 
     #################################
@@ -234,30 +375,47 @@ def make_limit_plot(conf) :
     ######################################
     if conf.show_previous_8TeV_result :
         rfile = ROOT.TFile(conf.previous_result_file)
-        prev_wwlike = rfile.Get(conf.previous_contours["wwlike"])
-        prev_stop1l = rfile.Get(conf.previous_contours["stop1l"])
-        prev_stop2l = rfile.Get(conf.previous_contours["stop2l"])
+        if grid == "bWN":
+            prev_wwlike = rfile.Get(conf.previous_contours["wwlike"])
+            prev_stop1l = rfile.Get(conf.previous_contours["stop1l"])
+            prev_stop2l = rfile.Get(conf.previous_contours["stop2l"])
+        
+            prev_wwlike.SetLineColor(ROOT.TColor.GetColor("#FF4444"))
+            prev_stop1l.SetLineColor(ROOT.TColor.GetColor("#F685E4"))
+            prev_stop2l.SetLineColor(ROOT.TColor.GetColor("#B93B8F"))
+        
+            prev_wwlike.SetLineWidth(3)
+            prev_stop1l.SetLineWidth(3)
+            prev_stop2l.SetLineWidth(3)
+        
+            #prev_wwlike.SetFillStyle( 1001 )
+            #prev_wwlike.SetFillStyle( 3005 )
+            #prev_wwlike.SetFillColorAlpha(ROOT.TColor.GetColor("#FF4444"), 0.1)
+        
+            prev_wwlike.Draw("same")
+            prev_stop1l.Draw("same")
+            prev_stop2l.Draw("same")
+        
+            leg.AddEntry(prev_wwlike, "WW-like 8 TeV","l")
+            leg.AddEntry(prev_stop2l, "Stop-2L 8 TeV","l")
+            leg.AddEntry(prev_stop1l, "Stop-1L 8 TeV","l")
+        elif grid == "c1c1_slep":
+            prev_mt2        = rfile.Get(conf.previous_contours["mt2"])
+            prev_superrazor = rfile.Get(conf.previous_contours["superrazor"])
 
-        prev_wwlike.SetLineColor(ROOT.TColor.GetColor("#FF4444"))
-        prev_stop1l.SetLineColor(ROOT.TColor.GetColor("#F685E4"))
-        prev_stop2l.SetLineColor(ROOT.TColor.GetColor("#B93B8F"))
+            #prev_mt2.SetLineColor(ROOT.TColor.GetColor("#FF4444"))
+            #prev_superrazor.SetLineColor(ROOT.TColor.GetColor("#F685E4"))
+            prev_mt2.SetLineColor(ROOT.kBlue)
+            prev_superrazor.SetLineColor(ROOT.kGreen+2)
 
-        prev_wwlike.SetLineWidth(3)
-        prev_stop1l.SetLineWidth(3)
-        prev_stop2l.SetLineWidth(3)
+            prev_mt2.SetLineWidth(3)
+            prev_superrazor.SetLineWidth(3)
 
-        #prev_wwlike.SetFillStyle( 1001 )
-        #prev_wwlike.SetFillStyle( 3005 )
-        #prev_wwlike.SetFillColorAlpha(ROOT.TColor.GetColor("#FF4444"), 0.1)
+            prev_mt2.Draw("same")
+            prev_superrazor.Draw("same")
 
-        prev_wwlike.Draw("same")
-        prev_stop1l.Draw("same")
-        prev_stop2l.Draw("same")
-
-        leg.AddEntry(prev_wwlike, "WW-like 8 TeV","l")
-        leg.AddEntry(prev_stop2l, "Stop-2L 8 TeV","l")
-        leg.AddEntry(prev_stop1l, "Stop-1L 8 TeV","l")
-
+            leg.AddEntry(prev_mt2, "SR-m_{T2} 8 TeV","l")
+            leg.AddEntry(prev_superrazor, "Super-razor 8 TeV","l")
 
     # now that we have all the contours, draw the legend
     leg.Draw()
@@ -365,7 +523,7 @@ if __name__ == "__main__" :
 
 
     # find the best SR per point (if doing PWC)
-    #find_best_SR_per_point(gridConf)
+    find_best_SR_per_point(gridConf)
 
     if gridConf.do_best_sr_per_point :
         make_best_sr_plot(gridConf)
