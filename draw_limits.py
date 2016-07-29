@@ -31,6 +31,8 @@ def get_configuration(grid) :
         configuration_file = "SRwt_sfdf.py"
     elif grid == "c1c1_slep" :
         configuration_file = "c1c1_slep.py"
+    elif grid == "SlepSlep" :
+        configuration_file = "SlepSlep.py"
     else :
         print "get_configuration    ERROR unsupported grid. Exiting."
         sys.exit()
@@ -320,6 +322,18 @@ def make_limit_plot(conf) :
         g_exp       = make_contour(conf, reg_=region, type="exp", pwc=True)
         g_expUp     = make_contour(conf, reg_=region, type="expUp", pwc=True)
         g_expDn     = make_contour(conf, reg_=region, type="expDn", pwc=True)
+    elif grid == "SlepSlep":
+        g_obs       = make_contour(conf, reg_=region, type="obs", pwc=True)
+        print "make_limit_plot   NOT GRABBING UP/DOWN OBSERVED CONTOURS"
+        g_obsUp = None
+        g_obsDn = None
+        #g_obsUp     = make_contour(conf, reg_=region, type="obsUp", pwc=True)
+        #g_obsDn     = make_contour(conf, reg_=region, type="obsDn", pwc=True)
+
+        # exp
+        g_exp       = make_contour(conf, reg_=region, type="exp", pwc=True)
+        g_expUp     = make_contour(conf, reg_=region, type="expUp", pwc=True)
+        g_expDn     = make_contour(conf, reg_=region, type="expDn", pwc=True)
 
 
     #################################
@@ -335,7 +349,7 @@ def make_limit_plot(conf) :
     g_obs.SetLineColor(ROOT.TColor.GetColor( c_Observed ))
     g_obs.SetLineStyle(1)
     g_obs.SetLineWidth(3)
-    g_obs.Draw("CP same")
+    g_obs.Draw("C same")
     c.Update()
 
     for g in [g_obsUp, g_obsDn] :
@@ -403,8 +417,6 @@ def make_limit_plot(conf) :
             prev_mt2        = rfile.Get(conf.previous_contours["mt2"])
             prev_superrazor = rfile.Get(conf.previous_contours["superrazor"])
 
-            #prev_mt2.SetLineColor(ROOT.TColor.GetColor("#FF4444"))
-            #prev_superrazor.SetLineColor(ROOT.TColor.GetColor("#F685E4"))
             prev_mt2.SetLineColor(ROOT.kBlue)
             prev_superrazor.SetLineColor(ROOT.kGreen+2)
 

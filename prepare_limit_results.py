@@ -68,7 +68,9 @@ def get_final_name() :
             return "test_%s_%s_%s_Output_hypotest.root"%(region, channel, grid)
             #return "%s_%s_%s_%s_Output_hypotest.root"%(region, channel, grid, syst)
     elif grid == "c1c1_slep" :
-        return "TwoLepFit_someSyst_withFake_130716_splitVV_histoSys_%s_Output_hypotest.root"%(region)
+        return "C1C1_%s_noSyst_Output_hypotest.root"%(region)
+    elif grid == "SlepSlep" :
+        return "SlSl_%s_noSyst_Output_hypotest.root"%(region)
     else :
         print "get_final_name    ERROR requested grid not supported. Exiting."
         sys.exit()
@@ -97,6 +99,8 @@ def make_harvest_list_files() :
         formatting = "hypo_bWN_%f_%f"
     elif grid == "c1c1_slep":
         formatting = "hypo_c1c1_slep_%f_%f"
+    elif grid == "SlepSlep":
+        formatting = "hypo_SlepSlep_%f_%f"
     else :
         print "make_harvest_list_files    ERROR requested grid not supported. Exitting."
         sys.exit()
@@ -139,7 +143,12 @@ def humanize_list_files(listdir) :
 
     #in_list = "%stest_%s_%s_%s_Output_hypotest__1_harvest_list.json"%(listdir, region, channel, grid)
     #in_list = "%s%s_%s_%s_%s_Output_hypotest__1_harvest_list.json"%(listdir, region, channel, grid, syst)
-    in_list = "%sTwoLepFit_someSyst_withFake_130716_splitVV_histoSys_%s_Output_hypotest__1_harvest_list.json"%(listdir,region)
+    #in_list = "%sTwoLepFit_someSyst_withFake_130716_splitVV_histoSys_%s_Output_hypotest__1_harvest_list.json"%(listdir,region)
+    #in_list = "%s2LExcl_withFakesSplitVV_NormhistoSys_%s_Output_hypotest__1_harvest_list.json"%(listdir,region)
+    if grid == "c1c1_slep":
+        in_list = "%sC1C1_%s_noSyst_Output_hypotest__1_harvest_list.json"%(listdir,region)
+    elif grid == "SlepSlep":
+        in_list = "%sSlSl_%s_noSyst_Output_hypotest__1_harvest_list.json"%(listdir,region)
     limit_result_dir = "./limit_results/%s_%s_%s/"%(region, channel, grid)
     mk_limresult = "mkdir -p %s"%(limit_result_dir)
     subprocess.call(mk_limresult, shell=True)
@@ -210,7 +219,7 @@ if __name__=="__main__" :
         # on the workspace filename structure
         # remember: for TH2 --> y:x
         interpretation = ""
-        if grid=="bWN" or grid=="c1c1_slep": interpreation = "mN1:mC1"
+        if grid=="bWN" or grid=="c1c1_slep" or grid=="SlepSlep": interpreation = "mN1:mC1"
         else :
             print "ERROR Interpretation for requested grid (%s) unavailable. Exiting."%(grid)
             sys.exit()

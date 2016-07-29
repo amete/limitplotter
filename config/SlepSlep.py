@@ -65,9 +65,9 @@ conf.y_title = "m_{#tilde{#chi}_{1}^{ 0}} [GeV]"
 # limit plot grid ranges
 #######################################
 conf.xlow   = 100       # GeV
-conf.xhigh  = 750       # GeV
+conf.xhigh  = 600       # GeV
 conf.ylow   = 0         # GeV 
-conf.yhigh  = 450       # GeV
+conf.yhigh  = 350       # GeV
 
 
 #######################################
@@ -79,7 +79,7 @@ conf.yhigh  = 450       # GeV
 #######################################
 # decay process
 #######################################
-conf.decay_process = "#scale[0.8]{C1C1 via slepton}"
+conf.decay_process = "#scale[0.8]{Slepton-pair}"
 #conf.decay_process = "#scale[0.8]{#tilde{t} #rightarrow bW#tilde{#chi}_{1}^{ 0}  }"
 
 
@@ -102,14 +102,14 @@ conf.show_exp_sig = False
 conf.do_xsec_plot = False
 
 
-########################################
-# 8 TeV results
-########################################
-conf.show_previous_8TeV_result = True
-conf.previous_result_file = "/data/uclhc/uci/user/amete/limits_twolepton/8tev_2lewk_limits/combined_obs.root"
-conf.previous_contours = {}
-conf.previous_contours["mt2"] = "contour_obs"
-conf.previous_contours["superrazor"] = "Graph"
+#########################################
+## 8 TeV results
+#########################################
+conf.show_previous_8TeV_result = False
+#conf.previous_result_file = "/data/uclhc/uci/user/amete/limits_twolepton/8tev_2lewk_limits/combined_obs.root"
+#conf.previous_contours = {}
+#conf.previous_contours["mt2"] = "contour_obs"
+#conf.previous_contours["superrazor"] = "Graph"
 
 
 #######################################

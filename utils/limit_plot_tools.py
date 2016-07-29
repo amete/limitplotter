@@ -66,7 +66,7 @@ def get_atlas_label() :
 #  Lumi Label
 # -----------------------------
 def get_lumi_label() :
-    label = "#scale[0.8]{#int Ldt = 5.82 fb^{-1}, #sqrt{s} = 13 TeV}"
+    label = "#scale[0.8]{#int Ldt = 13.3 fb^{-1}, #sqrt{s} = 13 TeV}"
     return label
 
 ''' ---------------------- '''
@@ -207,6 +207,7 @@ def make_contour(conf, reg_="", type="exp", pwc=False) :
 
     hist = None
     hist = r.TH2F("tmp_"+type, "tmp_"+type, 50, conf.xlow, conf.xhigh, 50, conf.ylow, conf.yhigh)
+    #hist = r.TH2F("tmp_"+type, "tmp_"+type, 500, conf.xlow, conf.xhigh, 500, conf.ylow, conf.yhigh)
     g.SetHistogram(hist)
     pvalue = 0.05
     level = r.TMath.NormQuantile(1.0-pvalue)
