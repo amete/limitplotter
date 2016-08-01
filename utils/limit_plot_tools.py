@@ -206,8 +206,8 @@ def make_contour(conf, reg_="", type="exp", pwc=False) :
         g.SetPoint(g.GetN(), x, y, float(signif))
 
     hist = None
-    hist = r.TH2F("tmp_"+type, "tmp_"+type, 50, conf.xlow, conf.xhigh, 50, conf.ylow, conf.yhigh)
-    #hist = r.TH2F("tmp_"+type, "tmp_"+type, 500, conf.xlow, conf.xhigh, 500, conf.ylow, conf.yhigh)
+    #hist = r.TH2F("tmp_"+type, "tmp_"+type, 50, conf.xlow, conf.xhigh, 50, conf.ylow, conf.yhigh)
+    hist = r.TH2F("tmp_"+type, "tmp_"+type, 500, conf.xlow, conf.xhigh, 500, conf.ylow, conf.yhigh)
     g.SetHistogram(hist)
     pvalue = 0.05
     level = r.TMath.NormQuantile(1.0-pvalue)
@@ -220,7 +220,7 @@ def make_contour(conf, reg_="", type="exp", pwc=False) :
     h.SetContourLevel(0, level)
     c = r.TCanvas('tmp_can_'+type, '')
     c.cd()
-    #h.Smooth()
+    h.Smooth()
     h.Draw('CONT LIST')
     c.Update()
     contours = r.gROOT.GetListOfSpecials().FindObject('contours')

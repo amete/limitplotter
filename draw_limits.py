@@ -167,7 +167,7 @@ def get_bestSR_output_name(conf) :
     outname += "_"
     if conf.channel != "" :
         outname += conf.channel
-    outname += ".eps"
+    outname += ".pdf"
     return outname
 
 def draw_sig_or_cls(conf, reg_="", pwc=False) :
@@ -184,6 +184,7 @@ def draw_sig_or_cls(conf, reg_="", pwc=False) :
     for s in conf.signals :
         val, x, y = 0.0, 0.0, 0.0
         x = float(s.mX)
+        if x>400: continue
         y = float(s.mY)
         if conf.show_exp_cls :
             val = float(s.expectedCLs[reg_])
@@ -226,7 +227,7 @@ def get_limit_output_name(conf) :
     elif conf.show_obs_cls : outname += "obsCLs"
     elif conf.show_exp_sig : outname += "expSig"
     elif conf.show_obs_sig : outname += "obsSig" 
-    outname += ".eps"
+    outname += ".pdf"
     return outname
 
 def get_forbiddenlines(conf) :
@@ -292,6 +293,62 @@ def make_limit_plot(conf) :
     frame.GetXaxis().SetTitle(conf.x_title)
     frame.GetYaxis().SetTitle(conf.y_title)
     c.Update()
+
+    ######################################
+    # draw previous results
+    ######################################
+    if conf.show_previous_8TeV_result :
+        rfile = ROOT.TFile(conf.previous_result_file)
+        if grid == "bWN":
+            prev_wwlike = rfile.Get(conf.previous_contours["wwlike"])
+            prev_stop1l = rfile.Get(conf.previous_contours["stop1l"])
+            prev_stop2l = rfile.Get(conf.previous_contours["stop2l"])
+        
+            #prev_wwlike.SetLineColor(ROOT.TColor.GetColor("#FF4444"))
+            #prev_stop1l.SetLineColor(ROOT.TColor.GetColor("#F685E4"))
+            #prev_stop2l.SetLineColor(ROOT.TColor.GetColor("#B93B8F"))
+
+            prev_wwlike.SetLineColor((ROOT.kAzure+6 )+1)
+            prev_stop1l.SetLineColor((ROOT.kSpring-5)-1)
+            prev_stop2l.SetLineColor((ROOT.kOrange-3)-2)#ROOT.kMagenta)
+
+            prev_wwlike.SetFillColorAlpha(ROOT.kAzure+6 ,0.65)
+            prev_stop1l.SetFillColorAlpha(ROOT.kSpring-5,1.00)
+            prev_stop2l.SetFillColorAlpha(ROOT.kOrange-3,0.65)#ROOT.kMagenta)
+        
+            prev_wwlike.SetLineWidth(3)
+            prev_stop1l.SetLineWidth(3)
+            prev_stop2l.SetLineWidth(3)
+        
+            #prev_wwlike.SetFillStyle( 1001 )
+            #prev_wwlike.SetFillStyle( 3005 )
+            #prev_wwlike.SetFillColorAlpha(ROOT.TColor.GetColor("#FF4444"), 0.1)
+
+            prev_stop1l.Draw("same F")
+            prev_stop2l.Draw("same F")
+            prev_wwlike.Draw("same F")
+            prev_stop1l.Draw("same")
+            prev_stop2l.Draw("same")
+            prev_wwlike.Draw("same")
+        
+            #leg.AddEntry(prev_wwlike, "WW-like 8 TeV","lf")
+            #leg.AddEntry(prev_stop2l, "Stop-2L 8 TeV","lf")
+            #leg.AddEntry(prev_stop1l, "Stop-1L 8 TeV","lf")
+        elif grid == "c1c1_slep":
+            prev_mt2        = rfile.Get(conf.previous_contours["mt2"])
+            prev_superrazor = rfile.Get(conf.previous_contours["superrazor"])
+
+            prev_mt2.SetLineColor(ROOT.kBlue)
+            prev_superrazor.SetLineColor(ROOT.kGreen+2)
+
+            prev_mt2.SetLineWidth(3)
+            prev_superrazor.SetLineWidth(3)
+
+            prev_mt2.Draw("same")
+            prev_superrazor.Draw("same")
+
+            #leg.AddEntry(prev_mt2, "SR-m_{T2} 8 TeV","l")
+            #leg.AddEntry(prev_superrazor, "Super-razor 8 TeV","l")
 
     ################################
     # grab the 95% CL contours
@@ -380,60 +437,18 @@ def make_limit_plot(conf) :
     leg.AddEntry(g_obs, "Observed limit","l")
 
     legend_band_entry(leg, "Expected limit (#pm1 #sigma_{exp})", ROOT.TColor.GetColor(c_BandYellow), 1001, ROOT.TColor.GetColor(c_Expected), 7, 2)
-
-
-
-
-    ######################################
-    # draw previous results
-    ######################################
     if conf.show_previous_8TeV_result :
-        rfile = ROOT.TFile(conf.previous_result_file)
         if grid == "bWN":
-            prev_wwlike = rfile.Get(conf.previous_contours["wwlike"])
-            prev_stop1l = rfile.Get(conf.previous_contours["stop1l"])
-            prev_stop2l = rfile.Get(conf.previous_contours["stop2l"])
-        
-            prev_wwlike.SetLineColor(ROOT.TColor.GetColor("#FF4444"))
-            prev_stop1l.SetLineColor(ROOT.TColor.GetColor("#F685E4"))
-            prev_stop2l.SetLineColor(ROOT.TColor.GetColor("#B93B8F"))
-        
-            prev_wwlike.SetLineWidth(3)
-            prev_stop1l.SetLineWidth(3)
-            prev_stop2l.SetLineWidth(3)
-        
-            #prev_wwlike.SetFillStyle( 1001 )
-            #prev_wwlike.SetFillStyle( 3005 )
-            #prev_wwlike.SetFillColorAlpha(ROOT.TColor.GetColor("#FF4444"), 0.1)
-        
-            prev_wwlike.Draw("same")
-            prev_stop1l.Draw("same")
-            prev_stop2l.Draw("same")
-        
-            leg.AddEntry(prev_wwlike, "WW-like 8 TeV","l")
-            leg.AddEntry(prev_stop2l, "Stop-2L 8 TeV","l")
-            leg.AddEntry(prev_stop1l, "Stop-1L 8 TeV","l")
+            leg.AddEntry(prev_stop1l, "ATLAS 8 TeV (Stop-1L)","f")
+            leg.AddEntry(prev_stop2l, "ATLAS 8 TeV (Stop-2L)","f")
+            leg.AddEntry(prev_wwlike, "ATLAS 8 TeV (WW-like)","f")
         elif grid == "c1c1_slep":
-            prev_mt2        = rfile.Get(conf.previous_contours["mt2"])
-            prev_superrazor = rfile.Get(conf.previous_contours["superrazor"])
-
-            prev_mt2.SetLineColor(ROOT.kBlue)
-            prev_superrazor.SetLineColor(ROOT.kGreen+2)
-
-            prev_mt2.SetLineWidth(3)
-            prev_superrazor.SetLineWidth(3)
-
-            prev_mt2.Draw("same")
-            prev_superrazor.Draw("same")
-
             leg.AddEntry(prev_mt2, "SR-m_{T2} 8 TeV","l")
             leg.AddEntry(prev_superrazor, "Super-razor 8 TeV","l")
 
     # now that we have all the contours, draw the legend
     leg.Draw()
     c.Update()
-
-
 
     #####################################
     # draw the forbidden lines

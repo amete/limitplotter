@@ -88,9 +88,9 @@ conf.do_limit_plot = True
 
 ## CLs/Sig per point
 conf.show_exp_cls = False
-conf.show_obs_cls = False
+conf.show_obs_cls = False 
 conf.show_obs_sig = False
-conf.show_exp_sig = True
+conf.show_exp_sig = False
 
 ## xsec upper limit
 conf.do_xsec_plot = False
