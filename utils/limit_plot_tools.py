@@ -68,7 +68,7 @@ def get_atlas_label() :
 #  Lumi Label
 # -----------------------------
 def get_lumi_label() :
-    label = "#scale[0.8]{L = 13.3 fb^{-1}, #sqrt{s} = 13 TeV}"
+    label = "#scale[0.8]{L = 36.1 fb^{-1}, #sqrt{s} = 13 TeV}"
     return label
 
 ''' ---------------------- '''
@@ -185,6 +185,16 @@ def make_contour(conf, reg_="", type="exp", pwc=False) :
     g.SetTitle("g_"+type)
     for s in signals :
         signif, x, y = 0.0, float(s.mX), float(s.mY)
+        ##### SERHAN
+        ##### SERHAN
+        ##### SERHAN
+        # Hack...
+        if "2body" in reg_ and (x-y<172): continue
+        elif "3body" in reg_ and (x-y<85. or x-y>172): continue
+        elif "4body" in reg_ and (x-y>80.): continue
+        ##### SERHAN
+        ##### SERHAN
+        ##### SERHAN
         if pwc :
             if   type == "obs"   : signif = s.bestObservedSig
             elif type == "obsUp" : signif = s.bestObservedSigUp1s
@@ -324,7 +334,7 @@ def make_exclusion_band(conf, nom, up, down) :
     c = conf.limit_canvas
     c.cd() 
     # now draw
-    gr.Draw("l")
+    gr.Draw("l same")
     gr.SetLineColor( r.TColor.GetColor(c_Expected) )
     gr.SetLineStyle(7)
     gr.SetLineWidth(2)

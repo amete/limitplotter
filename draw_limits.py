@@ -33,6 +33,8 @@ def get_configuration(grid) :
         configuration_file = "c1c1_slep.py"
     elif grid == "SlepSlep" :
         configuration_file = "SlepSlep.py"
+    elif grid == "tN" :
+        configuration_file = "SRall_stop2L_tN.py"
     else :
         print "get_configuration    ERROR unsupported grid. Exiting."
         sys.exit()
@@ -184,10 +186,20 @@ def draw_sig_or_cls(conf, reg_="", pwc=False) :
     for s in conf.signals :
         val, x, y = 0.0, 0.0, 0.0
         x = float(s.mX)
-        if x>400: continue
+        #if x>400: continue
         y = float(s.mY)
-        if x > 440 : continue
-        if y > 330 : continue
+        if x > 490 : continue
+        if y > 375 : continue
+        ##### SERHAN
+        ##### SERHAN
+        ##### SERHAN
+        # Hack...
+        if "2body" in reg_ and (x-y<172): continue
+        elif "3body" in reg_ and (x-y<85. or x-y>172): continue
+        elif "4body" in reg_ and (x-y>80.): continue
+        ##### SERHAN
+        ##### SERHAN
+        ##### SERHAN
         if conf.show_exp_cls :
             val = float(s.expectedCLs[reg_])
         elif conf.show_obs_cls :
@@ -236,7 +248,7 @@ def get_forbiddenlines(conf) :
 
     out_lines = []
 
-    if grid == "bWN" :
+    if grid == "bWN" or grid == "tN":
 
         x_low = conf.xlow
         y_low = conf.ylow
@@ -301,42 +313,48 @@ def make_limit_plot(conf) :
     ################################# 
     leg = make_default_legend(0.55,0.72,0.89,0.91)
 
-    ######################################
-    # draw previous results
-    ######################################
-    if conf.show_previous_8TeV_result :
-        rfile = ROOT.TFile(conf.previous_result_file)
-        prev_wwlike = rfile.Get(conf.previous_contours["wwlike"])
-        prev_stop1l = rfile.Get(conf.previous_contours["stop1l"])
-        prev_stop2l = rfile.Get(conf.previous_contours["stop2l"])
+    ########################################
+    ### draw previous results
+    ########################################
+    ##if conf.show_previous_8TeV_result :
+    ##    rfile = ROOT.TFile(conf.previous_result_file)
+    ##    for key, value in conf.previous_contours.iteritems():
+    ##        exclusion_8TeV = rfile.Get(value)
+    ##        exclusion_8TeV.SetLineColor((ROOT.kAzure+6))
+    ##        exclusion_8TeV.SetFillColor((ROOT.kAzure+6))
+    ##        exclusion_8TeV.Draw("same F")
 
-        #prev_wwlike.SetLineColor(ROOT.TColor.GetColor("#FF4444"))
-        #prev_stop1l.SetLineColor(ROOT.TColor.GetColor("#F685E4"))
-        #prev_stop2l.SetLineColor(ROOT.TColor.GetColor("#B93B8F"))
+    ##    ##prev_wwlike = rfile.Get(conf.previous_contours["wwlike"])
+    ##    ##prev_stop1l = rfile.Get(conf.previous_contours["stop1l"])
+    ##    ##prev_stop2l = rfile.Get(conf.previous_contours["stop2l"])
 
-        prev_wwlike.SetLineColor((ROOT.kAzure+6)+1)
-        prev_stop1l.SetLineColor((ROOT.kSpring-5)-1)
-        prev_stop2l.SetLineColor((ROOT.kOrange-3)-2)
+    ##    ###prev_wwlike.SetLineColor(ROOT.TColor.GetColor("#FF4444"))
+    ##    ###prev_stop1l.SetLineColor(ROOT.TColor.GetColor("#F685E4"))
+    ##    ###prev_stop2l.SetLineColor(ROOT.TColor.GetColor("#B93B8F"))
 
-        prev_wwlike.SetFillColorAlpha(ROOT.kAzure+6, 0.65)
-        prev_stop1l.SetFillColorAlpha(ROOT.kSpring-5, 1.00)
-        prev_stop2l.SetFillColorAlpha(ROOT.kOrange-3,0.65)
+    ##    ##prev_wwlike.SetLineColor((ROOT.kAzure+6)+1)
+    ##    ##prev_stop1l.SetLineColor((ROOT.kSpring-5)-1)
+    ##    ##prev_stop2l.SetLineColor((ROOT.kOrange-3)-2)
 
-        prev_wwlike.SetLineWidth(3)
-        prev_stop1l.SetLineWidth(3)
-        prev_stop2l.SetLineWidth(3)
+    ##    ##prev_wwlike.SetFillColorAlpha(ROOT.kAzure+6, 0.65)
+    ##    ##prev_stop1l.SetFillColorAlpha(ROOT.kSpring-5, 1.00)
+    ##    ##prev_stop2l.SetFillColorAlpha(ROOT.kOrange-3,0.65)
 
-        #prev_wwlike.SetFillStyle( 1001 )
-        #prev_wwlike.SetFillStyle( 3005 )
-        #prev_wwlike.SetFillColorAlpha(ROOT.TColor.GetColor("#FF4444"), 0.1)
+    ##    ##prev_wwlike.SetLineWidth(3)
+    ##    ##prev_stop1l.SetLineWidth(3)
+    ##    ##prev_stop2l.SetLineWidth(3)
 
-        prev_stop1l.Draw("same F")
-        prev_stop2l.Draw("same F")
-        prev_wwlike.Draw("same F")
+    ##    ###prev_wwlike.SetFillStyle( 1001 )
+    ##    ###prev_wwlike.SetFillStyle( 3005 )
+    ##    ###prev_wwlike.SetFillColorAlpha(ROOT.TColor.GetColor("#FF4444"), 0.1)
 
-        prev_stop1l.Draw("same")
-        prev_stop2l.Draw("same")
-        prev_wwlike.Draw("same")
+    ##    ##prev_stop1l.Draw("same F")
+    ##    ##prev_stop2l.Draw("same F")
+    ##    ##prev_wwlike.Draw("same F")
+
+    ##    ##prev_stop1l.Draw("same")
+    ##    ##prev_stop2l.Draw("same")
+    ##    ##prev_wwlike.Draw("same")
 
 
 
@@ -344,6 +362,13 @@ def make_limit_plot(conf) :
     # grab the 95% CL contours
     ################################
 
+    g_obs = []
+    g_obsUp = []
+    g_obsDn = []
+    g_exp = []
+    g_expUp = []
+    g_expDn = []
+  
     # obs
     if grid == "bWN":
         g_obs       = make_contour(conf, reg_=region, type="obs", pwc=False)
@@ -381,6 +406,27 @@ def make_limit_plot(conf) :
         g_exp       = make_contour(conf, reg_=region, type="exp", pwc=True)
         g_expUp     = make_contour(conf, reg_=region, type="expUp", pwc=True)
         g_expDn     = make_contour(conf, reg_=region, type="expDn", pwc=True)
+    elif grid == "tN":
+        for r in conf.regions:
+            if "4body" in r.name:
+                directory = "/data/uclhc/uci/user/amete/limits_twolepton/limitplotter/limit_results/SR4body_stop2L_tN/"
+                inputfile = ROOT.TFile(directory+"Graphs.root","READ")
+                g_obs.append(inputfile.Get("obs_nominal").Clone())
+                g_obsUp.append(None)
+                g_obsDn.append(None)
+                g_exp.append(inputfile.Get("exp_nominal").Clone())
+                g_expUp.append(inputfile.Get("exp_up").Clone())
+                g_expDn.append(inputfile.Get("exp_dn").Clone())
+                inputfile.Close()
+            else: 
+                # obs
+                g_obs.append(make_contour(conf, reg_=r.name, type="obs", pwc=False))
+                g_obsUp.append(None)
+                g_obsDn.append(None)
+                # exp
+                g_exp.append(make_contour(conf, reg_=r.name, type="exp", pwc=False))
+                g_expUp.append(make_contour(conf, reg_=r.name, type="expUp", pwc=False))
+                g_expDn.append(make_contour(conf, reg_=r.name, type="expDn", pwc=False))
 
    # g_obs.SetName("stop2l_3body_observed")
    # g_obs.SaveAs("observed_contour.root")
@@ -394,40 +440,76 @@ def make_limit_plot(conf) :
    # g_expDn.SetName("stop2l_3body_expected_d1s")
    # g_expDn.SaveAs("expected_contour_d1s.root")
 
-    #################################
-    # draw the band around the
-    # expected contours
-    #################################
-    make_exclusion_band(conf, g_exp, g_expUp, g_expDn)
-    c.Update()
+    if grid != "tN":
+        #################################
+        # draw the band around the
+        # expected contours
+        #################################
+        make_exclusion_band(conf, g_exp, g_expUp, g_expDn)
+        c.Update()
 
-    ################################
-    # draw the observed contours
-    ################################
-    g_obs.SetLineColor(ROOT.TColor.GetColor( c_Observed ))
-    g_obs.SetLineStyle(1)
-    g_obs.SetLineWidth(3)
-    g_obs.Draw("C same")
-    c.Update()
+        ################################
+        # draw the observed contours
+        ################################
+        g_obs.SetLineColor(ROOT.TColor.GetColor( c_Observed ))
+        g_obs.SetLineStyle(1)
+        g_obs.SetLineWidth(3)
+        g_obs.Draw("C same")
+        c.Update()
 
-    for g in [g_obsUp, g_obsDn] :
-        if not g : continue
-        g.SetLineColor(ROOT.TColor.GetColor( c_Observed ))
-        g.SetLineStyle(3)
-        g.SetLineWidth(2)
-        g.Draw("C same")
-    c.Update()
+        for g in [g_obsUp, g_obsDn] :
+            if not g : continue
+            g.SetLineColor(ROOT.TColor.GetColor( c_Observed ))
+            g.SetLineStyle(3)
+            g.SetLineWidth(2)
+            g.Draw("C same")
+        c.Update()
+    else:
+        for index,r in enumerate(conf.regions):
+            make_exclusion_band(conf, g_exp[index], g_expUp[index], g_expDn[index])
+            c.Update()
+        
+            ################################
+            # draw the observed contours
+            ################################
+            g_obs[index].SetLineColor(ROOT.TColor.GetColor( c_Observed ))
+            g_obs[index].SetLineStyle(1)
+            g_obs[index].SetLineWidth(3)
+            g_obs[index].Draw("C same")
+            c.Update()
 
+            for g in [g_obsUp[index], g_obsDn[index]] :
+                if not g : continue
+                g.SetLineColor(ROOT.TColor.GetColor( c_Observed ))
+                g.SetLineStyle(3)
+                g.SetLineWidth(2)
+                g.Draw("C same")
+            c.Update()
+
+
+    ######################################
+    # draw previous results
+    ######################################
+    if conf.show_previous_8TeV_result :
+        rfile = ROOT.TFile(conf.previous_result_file)
+        for key, value in conf.previous_contours.iteritems():
+            exclusion_8TeV = rfile.Get(value)
+            exclusion_8TeV.SetLineColor((ROOT.kAzure+6))
+            exclusion_8TeV.SetFillColor((ROOT.kAzure+6))
+            exclusion_8TeV.Draw("same F")
 
     #####################################
     # draw official and process labels
     #####################################
     draw_top_left_label(get_atlas_label(),  (0.0 + 1.3*ROOT.gPad.GetLeftMargin()), (1.0-1.6*ROOT.gPad.GetTopMargin()), font=72)
-    draw_top_left_label("Preliminary", (0.125 + 1.3*ROOT.gPad.GetLeftMargin()), (1.0-1.6*ROOT.gPad.GetTopMargin()))
+    draw_top_left_label("Internal", (0.125 + 1.3*ROOT.gPad.GetLeftMargin()), (1.0-1.6*ROOT.gPad.GetTopMargin()))
     draw_top_left_label(get_lumi_label(),   (0.0 + 1.3*ROOT.gPad.GetLeftMargin()), (1.0-2.7*ROOT.gPad.GetTopMargin()))
     draw_top_left_label(conf.decay_process, (0.0 + 1.3*ROOT.gPad.GetLeftMargin()), (1.0-3.65*ROOT.gPad.GetTopMargin()))
     if grid=="bWN" and region=="SRwt" :
         region_label = "SR_{W}^{3-body} + SR_{t}^{3-body}" 
+        draw_top_left_label(region_label, (0.0 + 1.3*ROOT.gPad.GetLeftMargin()), (1.0-4.7*ROOT.gPad.GetTopMargin()))  
+    elif grid=="tN": # and region=="SRall" :
+        region_label = "SR^{2/3/4-body}" 
         draw_top_left_label(region_label, (0.0 + 1.3*ROOT.gPad.GetLeftMargin()), (1.0-4.7*ROOT.gPad.GetTopMargin()))  
     c.Update()
 
@@ -436,11 +518,16 @@ def make_limit_plot(conf) :
     ######################################
     #leg = make_default_legend(0.55,0.72,0.89,0.91)
     #leg = make_default_legend(0.55,0.77,0.88,0.92)
-    leg.AddEntry(g_obs, "Observed limit (#pm1 #sigma_{theory})","l")
+    if grid != "tN":
+        leg.AddEntry(g_obs, "Observed limit (#pm1 #sigma_{theory})","l")
+    else:
+        leg.AddEntry(g_obs[0], "Observed limit (#pm1 #sigma_{theory})","l")
 
     #lines for the +/1 1 sigma theory
-    y_obs_up = 0.895 * 1.0075
-    y_obs_dn = 0.8699 * 1.013
+    #y_obs_up = 0.895 * 1.0075
+    #y_obs_dn = 0.8699 * 1.013
+    y_obs_up = 0.8825 * 1.0075
+    y_obs_dn = 0.8575 * 1.013
     draw_line(0.5625, y_obs_up, 0.62115, y_obs_up, ROOT.TColor.GetColor(c_Observed), line_style=3, line_width=2)
     draw_line(0.5625, y_obs_dn, 0.62115, y_obs_dn, ROOT.TColor.GetColor(c_Observed), line_style=3, line_width=2)
 
@@ -448,10 +535,10 @@ def make_limit_plot(conf) :
 
 
 
-    leg.AddEntry(prev_wwlike, "ATLAS 8 TeV (WW-like)","f")
-    leg.AddEntry(prev_stop2l, "ATLAS 8 TeV (Stop-2L)","f")
-    leg.AddEntry(prev_stop1l, "ATLAS 8 TeV (Stop-1L)","f")
-
+    ##leg.AddEntry(prev_wwlike, "ATLAS 8 TeV (WW-like)","f")
+    ##leg.AddEntry(prev_stop2l, "ATLAS 8 TeV (Stop-2L)","f")
+    ##leg.AddEntry(prev_stop1l, "ATLAS 8 TeV (Stop-1L)","f")
+    leg.AddEntry(exclusion_8TeV,"ATLAS 8 TeV","f")
 
 
     # now that we have all the contours, draw the legend
@@ -465,7 +552,7 @@ def make_limit_plot(conf) :
     for line_ in kin_lines :
         line_.Draw()
 
-    if "bWN" in grid :
+    if "bWN" in grid: # or "tN" in grid:
         mwline_text = "#Delta m(#tilde{t}_{1}, #tilde{#chi}_{1}^{0}) < m_{b} + m_{W}"
         mtline_text = "#Delta m(#tilde{t}_{1}, #tilde{#chi}_{1}^{0}) < m_{t}"
         mxline_text = "#Delta m(#tilde{t}_{1}, #tilde{#chi}_{1}^{0}) < 0"
@@ -483,7 +570,9 @@ def make_limit_plot(conf) :
     # draw CLs on plot
     ######################################
     if(conf.show_exp_cls or conf.show_obs_cls or conf.show_exp_sig or conf.show_obs_sig) and not conf.do_xsec_plot :
-        draw_sig_or_cls(conf, reg_=region)
+        #draw_sig_or_cls(conf, reg_=region)
+        for r in conf.regions:
+            draw_sig_or_cls(conf, reg_=r.name)
 
     
     ######################################
@@ -499,6 +588,7 @@ def make_limit_plot(conf) :
     ########################################
     save_name = get_limit_output_name(conf)
     print " >>> Saving limit plot to %s"%save_name
+    ROOT.gPad.RedrawAxis()
     c.SaveAs(save_name)
 
 

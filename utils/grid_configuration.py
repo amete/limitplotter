@@ -93,16 +93,27 @@ class GridConfiguration() :
         fields = columns.split(" ")
         mXidx = fields.index("mX")
         mYidx = fields.index("mY")
-        nom_file = self.regions[0].nominal_limit_results_file
-        lines = open(nom_file).readlines()
-        for line in lines[1:] : # first line is the header
-            line = line.strip()
-            if not line : continue
-            cols = line.split("\t")
-            mX = float(cols[mXidx])
-            mY = float(cols[mYidx])
-            s = Signal(mX, mY)
-            self.signals.append(s)
+        ##nom_file = self.regions[0].nominal_limit_results_file
+        ##lines = open(nom_file).readlines()
+        ##for line in lines[1:] : # first line is the header
+        ##    line = line.strip()
+        ##    if not line : continue
+        ##    cols = line.split("\t")
+        ##    mX = float(cols[mXidx])
+        ##    mY = float(cols[mYidx])
+        ##    s = Signal(mX, mY)
+        ##    self.signals.append(s)
+        for reg in self.regions:
+            nom_file = reg.nominal_limit_results_file
+            lines = open(nom_file).readlines()
+            for line in lines[1:] : # first line is the header
+                line = line.strip()
+                if not line : continue
+                cols = line.split("\t")
+                mX = float(cols[mXidx])
+                mY = float(cols[mYidx])
+                s = Signal(mX, mY)
+                self.signals.append(s)
 
         print "assign_grid    %s total grid points"%len(self.signals)
 
