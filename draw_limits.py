@@ -73,6 +73,8 @@ def find_best_SR_per_point(conf) :
         # observed signif. up/down
         if s.observedSigUp1s : s.bestObservedSigUp1s = s.observedSigUp1s[best_region]
         if s.observedSigDn1s : s.bestObservedSigDn1s = s.observedSigDn1s[best_region]
+        # observed upper cross section limits
+        if s.observedXsecUL  : s.bestObservedXsecUL  = s.observedXsecUL[best_region]
 
 def make_best_sr_plot(conf) :
     '''
@@ -181,6 +183,7 @@ def draw_sig_or_cls(conf, reg_="", pwc=False) :
     tex = ROOT.TLatex(0.0,0.0,"")
     tex.SetTextFont(42)
     tex.SetTextSize(0.35 * tex.GetTextSize())
+    tex.SetTextAngle(50)
     #tex.SetTextSize(0.5 * tex.GetTextSize())
     markers = []
     for s in conf.signals :
@@ -188,15 +191,20 @@ def draw_sig_or_cls(conf, reg_="", pwc=False) :
         x = float(s.mX)
         #if x>400: continue
         y = float(s.mY)
-        if x > 490 : continue
-        if y > 375 : continue
+        if x > 810 : continue
+        if y > 400 : continue
+        if (x-y) > 19. and (x-y)<21: continue
+        if (x-y) > 49. and (x-y)<51: continue
+        if (x-y) > 89. and (x-y)<91: continue
         ##### SERHAN
         ##### SERHAN
         ##### SERHAN
         # Hack...
         if "2body" in reg_ and (x-y<172): continue
-        elif "3body" in reg_ and (x-y<85. or x-y>172): continue
-        elif "4body" in reg_ and (x-y>80.): continue
+        #elif "3body" in reg_ and (x-y>172 or (x-y)%10!=0 or x%25!=0 or (x-y)<25 or ((x-y) <= 80. and x>= 500.)): continue
+        ##elif "3body" in reg_ and (x-y<85. or x-y>172): continue
+        #elif "4body" in reg_ and (x-y>80.): continue
+        elif "34body" in reg_ and (x-y>172.): continue
         ##### SERHAN
         ##### SERHAN
         ##### SERHAN
@@ -208,6 +216,8 @@ def draw_sig_or_cls(conf, reg_="", pwc=False) :
             val = float(s.observedSig[reg_])
         elif conf.show_exp_sig :
             val = float(s.expectedSig[reg_])
+        elif conf.do_xsec_plot:
+            val = float(s.observedXsecUL[reg_])
 
         #if "SRwt" in reg_ and y > 300 : continue
 
@@ -218,10 +228,60 @@ def draw_sig_or_cls(conf, reg_="", pwc=False) :
     elif conf.show_obs_cls : z_title = "Numbers give the observed CL_{s} values"
     elif conf.show_obs_sig : z_title = "Numbers give the observed Significance"
     elif conf.show_exp_sig : z_title = "Numbers give the expected Significance"
+    elif conf.show_exp_sig : z_title = "Numbers give the expected Significance"
+    elif conf.do_xsec_plot : z_title = "Numbers give the observed Excluded Model Cross-sections [pb]"
 
-    draw_text(0.96,0.38,ROOT.kBlack,z_title,angle=90.0, size=0.03)
-    #draw_text(0.96,0.44,ROOT.kBlack,z_title,angle=90.0, size=0.03)
+    if not conf.do_xsec_plot:
+        draw_text(0.96,0.38,ROOT.kBlack,z_title,angle=90.0, size=0.03)
+    else:
+        draw_text(0.96,0.13,ROOT.kBlack,z_title,angle=90.0, size=0.03)
     c.Update()
+
+def save_hepdata_root_file(conf, reg_="", pwc = False):
+
+    print "save_hepdata_root_file    NEED TO HANDLE PWC CASE"
+
+    hist_name = ""
+    if conf.show_exp_cls :
+        hist_name = "exp_cls_TH2" 
+    elif conf.show_obs_cls :
+        hist_name = "obs_cls_TH2" 
+    elif conf.do_xsec_plot:
+        hist_name = "obs_xs_TH2" 
+
+    out_file = ROOT.TFile("ExclusionHEPData.root","UPDATE")
+    if out_file.GetListOfKeys().Contains(hist_name):
+        hist = out_file.Get(hist_name)
+    else:
+        hist = ROOT.TH2F(hist_name, hist_name, 750, 100, 850, 600, 0, 600)
+
+    for s in conf.signals :
+        val, x, y = 0.0, 0.0, 0.0
+        x = float(s.mX)
+        y = float(s.mY)
+        ##### SERHAN
+        ##### SERHAN
+        ##### SERHAN
+        if "2body" in reg_ and (x-y<172): continue
+        elif "34body" in reg_ and (x-y>172.): continue
+        ##### SERHAN
+        ##### SERHAN
+        ##### SERHAN
+        if conf.show_exp_cls :
+            hist.Fill(x,y,float(s.expectedCLs[reg_]))
+        elif conf.show_obs_cls :
+            hist.Fill(x,y,float(s.observedCLs[reg_]))
+        elif conf.do_xsec_plot:
+            hist.Fill(x,y,float(s.observedXsecUL[reg_]))
+
+    graph = ROOT.TGraph2D(hist)    
+    graph.SetName(hist_name.replace("TH2","TGraph2"))
+    graph.SetTitle(hist_name.replace("TH2","TGraph2"))
+
+    out_file.cd()
+    hist.Write()
+    graph.Write()
+    out_file.Close()
 
 def draw_upperlimit_xsec(conf) :
     print "draw_upperlimit_xsec    THIS METHOD IS NOT IMPLEMENTED"
@@ -254,11 +314,11 @@ def get_forbiddenlines(conf) :
         y_low = conf.ylow
 
         # mW line
-        y_high_w = 320
+        y_high_w = 400 #320
         slope = 1.0
         y_w = slope * x_low - 84.8
         beginx = x_low
-        endx_w = 400
+        endx_w = 500 #400
         #endx_w = 1.2*320
 
         line_w = ROOT.TLine(beginx, y_w, endx_w, endx_w * slope - 84.8)
@@ -270,7 +330,7 @@ def get_forbiddenlines(conf) :
         # mTop line
         beginx = 172.5
         y_t = 0.0
-        endx_t = 450
+        endx_t = 550 #450
 
         line_t = ROOT.TLine(beginx, y_t, endx_t, endx_t * slope - 172.5)
         line_t.SetLineStyle(2)
@@ -281,7 +341,7 @@ def get_forbiddenlines(conf) :
         # mchi line
         beginx = x_low
         y_chi = 100
-        endx_chi = 317
+        endx_chi = 450 #317
         line_chi = ROOT.TLine(beginx, y_chi, endx_chi, endx_chi * slope) 
         line_chi.SetLineStyle(2)
         line_chi.SetLineWidth(2)
@@ -408,12 +468,18 @@ def make_limit_plot(conf) :
         g_expDn     = make_contour(conf, reg_=region, type="expDn", pwc=True)
     elif grid == "tN":
         for r in conf.regions:
-            if "4body" in r.name:
-                directory = "/data/uclhc/uci/user/amete/limits_twolepton/limitplotter/limit_results/SR4body_stop2L_tN/"
-                inputfile = ROOT.TFile(directory+"Graphs.root","READ")
+            if True: ###"4body" in r.name:
+                if "34body" in r.name:
+                    directory = "/data/uclhc/uci/user/amete/limits_twolepton/limitplotter/limit_results_May2/SR34body_stop2L_tN/"
+                elif "2body" in r.name:
+                    directory = "/data/uclhc/uci/user/amete/limits_twolepton/limitplotter/limit_results_May2/SR2body_stop2L_tN/"
+                else: continue
+                inputfile    = ROOT.TFile(directory+"Graphs.root","READ")
+                inputfile_Up = ROOT.TFile(directory+"Graphs_Up.root","READ")
+                inputfile_Dn = ROOT.TFile(directory+"Graphs_Down.root","READ")
                 g_obs.append(inputfile.Get("obs_nominal").Clone())
-                g_obsUp.append(None)
-                g_obsDn.append(None)
+                g_obsUp.append(inputfile_Up.Get("obs_nominal").Clone())
+                g_obsDn.append(inputfile_Dn.Get("obs_nominal").Clone())
                 g_exp.append(inputfile.Get("exp_nominal").Clone())
                 g_expUp.append(inputfile.Get("exp_up").Clone())
                 g_expDn.append(inputfile.Get("exp_dn").Clone())
@@ -497,20 +563,41 @@ def make_limit_plot(conf) :
             exclusion_8TeV.SetLineColor((ROOT.kAzure+6))
             exclusion_8TeV.SetFillColor((ROOT.kAzure+6))
             exclusion_8TeV.Draw("same F")
+        rfile.Close()
+        # Top polarization
+        #spinline_obs = ROOT.TLine(198, 0, 198, 198-172.5)
+        #spinline_obs.SetLineWidth(1)
+        #spinline_obs.SetLineColor((ROOT.kAzure+6))
+        #spinline_obs.Draw("same F")
+        from array import array
+        x_spin = array('f',[ 172.5, 198.0,     198.0, 172.5 ])
+        y_spin = array('f',[   0.0,   0.0, 198-172.5,   0.0 ])
+        spinline_obs = ROOT.TPolyLine(4,x_spin, y_spin)
+        spinline_obs.SetLineWidth(1)
+        spinline_obs.SetLineColor((ROOT.kAzure+6))
+        spinline_obs.SetFillColor((ROOT.kAzure+6))
+        spinline_obs.Draw("f")
 
     #####################################
     # draw official and process labels
     #####################################
-    draw_top_left_label(get_atlas_label(),  (0.0 + 1.3*ROOT.gPad.GetLeftMargin()), (1.0-1.6*ROOT.gPad.GetTopMargin()), font=72)
-    draw_top_left_label("Internal", (0.125 + 1.3*ROOT.gPad.GetLeftMargin()), (1.0-1.6*ROOT.gPad.GetTopMargin()))
-    draw_top_left_label(get_lumi_label(),   (0.0 + 1.3*ROOT.gPad.GetLeftMargin()), (1.0-2.7*ROOT.gPad.GetTopMargin()))
-    draw_top_left_label(conf.decay_process, (0.0 + 1.3*ROOT.gPad.GetLeftMargin()), (1.0-3.65*ROOT.gPad.GetTopMargin()))
+    draw_top_left_label(get_atlas_label(),  (0.0 + 1.3*ROOT.gPad.GetLeftMargin()),   (1.0-1.6*ROOT.gPad.GetTopMargin()), font=72)
+    #draw_top_left_label("Internal",         (0.125 + 1.3*ROOT.gPad.GetLeftMargin()), (1.0-1.6*ROOT.gPad.GetTopMargin()))
+    #draw_top_left_label("Internal",         (0.165 + 1.3*ROOT.gPad.GetLeftMargin()), (1.0-1.6*ROOT.gPad.GetTopMargin()))
+    #draw_top_left_label("Preliminary",         (0.165 + 1.3*ROOT.gPad.GetLeftMargin()), (1.0-1.6*ROOT.gPad.GetTopMargin()))
+    #draw_top_left_label(get_lumi_label(),   (0.0 + 1.3*ROOT.gPad.GetLeftMargin()),   (1.0-2.7*ROOT.gPad.GetTopMargin()))
+    draw_top_left_label(get_lumi_label(),   (0.0 + 1.3*ROOT.gPad.GetLeftMargin()),   (1.0-2.35*ROOT.gPad.GetTopMargin()))
+    #draw_top_left_label(conf.decay_process, (0.0 + 1.3*ROOT.gPad.GetLeftMargin()),   (1.0-3.65*ROOT.gPad.GetTopMargin()))
+    #draw_top_left_label(conf.decay_process, (0.0 + 1.3*ROOT.gPad.GetLeftMargin()),   (1.0-3.8*ROOT.gPad.GetTopMargin()))
+    draw_top_left_label("#scale[0.75]{#tilde{t}_{1}#tilde{t}_{1} production, #tilde{t}_{1} #rightarrow t^{#scale[0.5]{(}}*^{#scale[0.2]{ }#scale[0.5]{)}} + #tilde{#chi}_{1}^{0}}", (0.0 + 1.*ROOT.gPad.GetLeftMargin()),   (0.915+ROOT.gPad.GetTopMargin()))
+    draw_top_left_label("#scale[0.7]{All limits at 95% CL}",   (0.0 + 1.3*ROOT.gPad.GetLeftMargin()),   (1.0-3.2*ROOT.gPad.GetTopMargin()))
     if grid=="bWN" and region=="SRwt" :
         region_label = "SR_{W}^{3-body} + SR_{t}^{3-body}" 
         draw_top_left_label(region_label, (0.0 + 1.3*ROOT.gPad.GetLeftMargin()), (1.0-4.7*ROOT.gPad.GetTopMargin()))  
     elif grid=="tN": # and region=="SRall" :
         region_label = "SR^{2/3/4-body}" 
-        draw_top_left_label(region_label, (0.0 + 1.3*ROOT.gPad.GetLeftMargin()), (1.0-4.7*ROOT.gPad.GetTopMargin()))  
+        #draw_top_left_label(region_label, (0.0 + 1.3*ROOT.gPad.GetLeftMargin()), (1.0-4.7*ROOT.gPad.GetTopMargin()))  
+        #draw_top_left_label(region_label, (0.0 + 1.3*ROOT.gPad.GetLeftMargin()), (1.0-5.4*ROOT.gPad.GetTopMargin()))  
     c.Update()
 
     ######################################
@@ -519,9 +606,9 @@ def make_limit_plot(conf) :
     #leg = make_default_legend(0.55,0.72,0.89,0.91)
     #leg = make_default_legend(0.55,0.77,0.88,0.92)
     if grid != "tN":
-        leg.AddEntry(g_obs, "Observed limit (#pm1 #sigma_{theory})","l")
+        leg.AddEntry(g_obs, "Observed limit (#pm1 #sigma_{theory}^{SUSY})","l")
     else:
-        leg.AddEntry(g_obs[0], "Observed limit (#pm1 #sigma_{theory})","l")
+        leg.AddEntry(g_obs[0], "Observed limit (#pm1 #sigma_{theory}^{SUSY})","l")
 
     #lines for the +/1 1 sigma theory
     #y_obs_up = 0.895 * 1.0075
@@ -538,7 +625,7 @@ def make_limit_plot(conf) :
     ##leg.AddEntry(prev_wwlike, "ATLAS 8 TeV (WW-like)","f")
     ##leg.AddEntry(prev_stop2l, "ATLAS 8 TeV (Stop-2L)","f")
     ##leg.AddEntry(prev_stop1l, "ATLAS 8 TeV (Stop-1L)","f")
-    leg.AddEntry(exclusion_8TeV,"ATLAS 8 TeV","f")
+    leg.AddEntry(exclusion_8TeV,"ATLAS 8 TeV, 20 fb^{-1}","f")
 
 
     # now that we have all the contours, draw the legend
@@ -552,35 +639,45 @@ def make_limit_plot(conf) :
     for line_ in kin_lines :
         line_.Draw()
 
-    if "bWN" in grid: # or "tN" in grid:
+    if "bWN" in grid or "tN" in grid:
         mwline_text = "#Delta m(#tilde{t}_{1}, #tilde{#chi}_{1}^{0}) < m_{b} + m_{W}"
         mtline_text = "#Delta m(#tilde{t}_{1}, #tilde{#chi}_{1}^{0}) < m_{t}"
         mxline_text = "#Delta m(#tilde{t}_{1}, #tilde{#chi}_{1}^{0}) < 0"
 
-        draw_text( 0.54, 0.51, ROOT.kGray+2, mwline_text, size=0.75*0.025, angle=39)
-        draw_text( 0.726, 0.51, ROOT.kGray+2, mtline_text, size=0.75*0.025, angle=40)
-        draw_text( 0.36, 0.51, ROOT.kGray+2, mxline_text, size=0.75*0.025, angle=41)
+        draw_text( 0.16, 0.33, ROOT.kGray+2, mxline_text, size=0.025, angle=50)
+        draw_text( 0.17, 0.23, ROOT.kGray+2, mwline_text, size=0.025, angle=50)
+        draw_text( 0.19, 0.14, ROOT.kGray+2, mtline_text, size=0.025, angle=50)
         #draw_text( 0.54, 0.51, ROOT.kGray+2, mwline_text, size=0.025, angle=39)
         #draw_text( 0.74, 0.51, ROOT.kGray+2, mtline_text, size=0.025, angle=41)
         #draw_text( 0.35, 0.51, ROOT.kGray+2, mxline_text, size=0.025, angle=41)
+
+        Twobody_text = "2-body"
+        Threebody_text = "3-body"
+        Fourbody_text = "4-body"
+
+        #draw_text( 0.50, 0.66, ROOT.kGray+2, Fourbody_text,  size=0.03, angle=50)
+        #draw_text( 0.545, 0.605, ROOT.kGray+2, Threebody_text, size=0.03, angle=50)
+        ##draw_text( 0.59, 0.56, ROOT.kGray+2, Twobody_text,   size=0.03, angle=50)
+        #draw_text( 0.55, 0.2, ROOT.kGray+2, Twobody_text,   size=0.03, angle=0)
     c.Update()
         
 
     ######################################
     # draw CLs on plot
     ######################################
-    if(conf.show_exp_cls or conf.show_obs_cls or conf.show_exp_sig or conf.show_obs_sig) and not conf.do_xsec_plot :
+    if(conf.show_exp_cls or conf.show_obs_cls or conf.show_exp_sig or conf.show_obs_sig or conf.do_xsec_plot): #and not conf.do_xsec_plot :
         #draw_sig_or_cls(conf, reg_=region)
         for r in conf.regions:
             draw_sig_or_cls(conf, reg_=r.name)
+            #save_hepdata_root_file(conf, reg_=r.name)
 
     
-    ######################################
-    # draw upper limit on production xsec
-    # for each point
-    ######################################
-    if conf.do_xsec_plot :
-        draw_upperlimit_xsec(conf)
+    #######################################
+    ## draw upper limit on production xsec
+    ## for each point
+    #######################################
+    #if conf.do_xsec_plot :
+    #    draw_upperlimit_xsec(conf)
 
 
     ########################################

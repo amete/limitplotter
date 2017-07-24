@@ -49,7 +49,8 @@ def draw_top_left_label(label, xpos=None, ypos=None, align=13, font=42) :
     tex = r.TLatex(0.0,0.0,'')
     tex.SetTextFont(font)
     #tex.SetTextFont(62)
-    tex.SetTextSize(0.75 * tex.GetTextSize())
+    #tex.SetTextSize(0.75 * tex.GetTextSize())
+    tex.SetTextSize(1.0 * tex.GetTextSize())
     tex.SetNDC()
     tex.SetTextAlign(align)
     tex.DrawLatex((0.0 + 1.2*r.gPad.GetLeftMargin()) if not xpos else xpos,
@@ -68,7 +69,8 @@ def get_atlas_label() :
 #  Lumi Label
 # -----------------------------
 def get_lumi_label() :
-    label = "#scale[0.8]{L = 36.1 fb^{-1}, #sqrt{s} = 13 TeV}"
+    #label = "#scale[0.8]{L = 36.1 fb^{-1}, #sqrt{s} = 13 TeV}"
+    label = "#scale[0.7]{#sqrt{s} = 13 TeV, 36.1 fb^{-1}}"
     return label
 
 ''' ---------------------- '''
@@ -105,7 +107,8 @@ def make_frame(conf) :
     r.gPad.SetLeftMargin( 0.13 )
     r.gPad.SetRightMargin( 0.08 )
     r.gPad.SetBottomMargin( 0.120 )
-    r.gPad.SetTopMargin( 0.060 )
+    #r.gPad.SetTopMargin( 0.060 )
+    r.gPad.SetTopMargin( 0.075 )
     
     return frame
 
@@ -190,8 +193,10 @@ def make_contour(conf, reg_="", type="exp", pwc=False) :
         ##### SERHAN
         # Hack...
         if "2body" in reg_ and (x-y<172): continue
-        elif "3body" in reg_ and (x-y<85. or x-y>172): continue
-        elif "4body" in reg_ and (x-y>80.): continue
+        #elif "3body" in reg_ and (x-y>172 or (x-y)%10!=0 or x%25!=0 or (x-y)<25 or ((x-y) <= 80. and x>= 500.)): continue
+        ##elif "3body" in reg_ and (x-y<85. or x-y>172): continue
+        #elif "4body" in reg_ and (x-y>80.): continue
+        elif "34body" in reg_ and (x-y>172.): continue
         ##### SERHAN
         ##### SERHAN
         ##### SERHAN

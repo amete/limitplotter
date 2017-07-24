@@ -20,12 +20,14 @@ conf = gridConf
 ###########################################
 conf.base_region = "SRall"
 
-regions = ["SR2body","SR3body","SR4body"]
+regions = ["SR2body","SR34body"]
+#regions = ["SR2body","SR3body","SR4body"]
 
 proper_names = {}
 proper_names["SR2body"] = "SR2body"
-proper_names["SR3body"] = "SR3body"
-proper_names["SR4body"] = "SR4body"
+proper_names["SR34body"] = "SR34body"
+#proper_names["SR3body"] = "SR3body"
+#proper_names["SR4body"] = "SR4body"
 
 conf.proper_names = proper_names
 
@@ -55,16 +57,16 @@ conf.ul_name_suffix = "_limitOnMu.log"
 ########################################
 # axis labels
 ########################################
-conf.x_title = "m_{#tilde{t}} [GeV]"
-#conf.x_title = "m(#tilde{t}_{1}) [GeV]"
-conf.y_title = "m_{#tilde{#chi}_{1}^{ 0}} [GeV]"
-#conf.y_title = "m(#tilde{#chi}_{1}^{ 0}) [GeV]"
+#conf.x_title = "m_{#tilde{t}} [GeV]"
+conf.x_title = "m(#tilde{t}_{1}) [GeV]"
+#conf.y_title = "m_{#tilde{#chi}_{1}^{ 0}} [GeV]"
+conf.y_title = "m(#tilde{#chi}_{1}^{ 0}) [GeV]"
 
 #######################################
 # limit plot grid ranges
 #######################################
 conf.xlow   = 100       # GeV
-conf.xhigh  = 800       # GeV
+conf.xhigh  = 850       # GeV
 #conf.xhigh  = 450       # GeV
 conf.ylow   = 0         # GeV 
 conf.yhigh  = 600      # GeV
@@ -80,7 +82,7 @@ conf.yhigh  = 600      # GeV
 #######################################
 # decay process
 #######################################
-conf.decay_process = "#scale[0.8]{#tilde{t} #rightarrow t^{#scale[0.5]{(}}*^{#scale[0.5]{)}} #tilde{#chi}_{1}^{0}  }"
+conf.decay_process = "#scale[1.0]{#tilde{t}_{1} #rightarrow t^{#scale[0.5]{(}}*^{#scale[0.5]{)}} #tilde{#chi}_{1}^{0}  }"
 
 
 ######################################################
@@ -99,7 +101,7 @@ conf.show_obs_sig = False
 conf.show_exp_sig = False
 
 ## xsec upper limit
-conf.do_xsec_plot = False
+conf.do_xsec_plot = True
 
 
 ########################################

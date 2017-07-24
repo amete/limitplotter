@@ -57,6 +57,8 @@ class Signal() :
         self.observedSigUp1s            = {}    ### < { region : sig }
         self.observedSigDn1s            = {}    ### < { region : sig }
 
+        # observed upper cross section limits
+        self.observedXsecUL             = {}
 
         #####################################
         ## if doing PWC store the besties
@@ -82,6 +84,9 @@ class Signal() :
         # observed significnace with signal xsec variation
         self.bestObservedSigUp1s    = 0.0       ### < observed significnace sigma_theory +1
         self.bestObservedSigDn1s    = 0.0       ### < observed significance sigma_theory -1
+
+        # observed upper cross section limits
+        self.bestObservedXsecUL     = 0.0
     
     def Print(self) :
         print "Signal: (%.1f,%.1f)"%(float(self.mX), float(self.mY))

@@ -53,7 +53,7 @@ class GridConfiguration() :
     def collect_region_limit_result_files(self, r) :
         lim_results_dir = str(os.environ['LIMPLOTDIR'])
         if not lim_results_dir.endswith("/") : lim_results_dir += "/"
-        lim_results_dir += "limitplotter/limit_results/"
+        lim_results_dir += "limitplotter/limit_results_May2/"
 
         if self.channel != "" :
             in_lim_dir = "%s_%s_%s/"%(r.name, self.channel, self.grid)
@@ -61,6 +61,7 @@ class GridConfiguration() :
             nom = glob.glob("%s%s*Nominal_limit_results.txt"%(lim_results_dir, in_lim_dir))
             up  = glob.glob("%s%s*Up_limit_results.txt"%(lim_results_dir, in_lim_dir))
             dn  = glob.glob("%s%s*Down_limit_results.txt"%(lim_results_dir, in_lim_dir))
+            print nom
 
             if len(nom) > 0 and len(nom) == 1 :
                 print "collect_region_limit_result_files    nominal limit results file: %s"%nom[0]
@@ -118,7 +119,7 @@ class GridConfiguration() :
         print "assign_grid    %s total grid points"%len(self.signals)
 
     def fill_raw_results(self) :
-        columns = "mX mY CLs CLsexp clsu1s clsd1s ObsSig ExpSig ExpSigUp1s ExpSigDn1s" 
+        columns = "mX mY CLs CLsexp clsu1s clsd1s ObsSig ExpSig ExpSigUp1s ExpSigDn1s xsec_obs" 
         fields = columns.split(" ")
         mXidx           = fields.index("mX")
         mYidx           = fields.index("mY")
@@ -130,6 +131,7 @@ class GridConfiguration() :
         expSigidx       = fields.index("ExpSig")
         expSigUp1sidx   = fields.index("ExpSigUp1s")
         expSigDn1sidx   = fields.index("ExpSigDn1s")
+        XsecULidx       = fields.index("xsec_obs")
 
         # fill the "nominal" raw results
         for r in self.regions :
@@ -155,6 +157,8 @@ class GridConfiguration() :
                             s.expectedSig[r.name]       = float(cols[expSigidx])
                             s.expectedSigUp1s[r.name]   = float(cols[expSigUp1sidx])
                             s.expectedSigDn1s[r.name]   = float(cols[expSigDn1sidx])
+                            # raw cross-section upper limit
+                            s.observedXsecUL[r.name]    = float(cols[XsecULidx])
             else :
                 print "fill_raw_results    ERROR nominal limit results file is \"\""
                 sys.exit()
